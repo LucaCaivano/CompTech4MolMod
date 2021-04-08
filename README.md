@@ -8,7 +8,7 @@ Projects of the numerical part of the course *Computational Techniques for Molec
 * Manfred Nesti (Mathematical Engineering)
 * Valeria Pajola (Chemical Engineering)
 * Alessandro Pegurri (Chemical Engineering)
-* Burno Ursino (Mathematical Engineering)
+* Bruno Ursino (Mathematical Engineering)
 * Chiara Vitale (Chemical Engineering)
 
 ## Assignment 1
