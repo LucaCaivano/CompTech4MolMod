@@ -1,4 +1,4 @@
-function F = force(grd, ptcls, grd_to_ptcl, r_cut, sigma, epsilon)
+ function F = force(grd, ptcls, grd_to_ptcl, r_cut, sigma, epsilon)
   Nparticelle = size(ptcls.x,2);
   F = zeros(2,Nparticelle);
   ForzeCoppie = zeros(2,Nparticelle,Nparticelle);
@@ -15,39 +15,32 @@ function F = force(grd, ptcls, grd_to_ptcl, r_cut, sigma, epsilon)
   r_cutQuadro = r_cut^2;
   for ic = nonempty(:)'
     if (ic > M1 + 1 && ic < Ncelle-M1-1)
-      aux = [ic,ic+1,ic+M1-1,ic+M1,ic+M1+1];
-      [s1,s2] = ind2sub ([grd.ncy, grd.ncx], aux);
-      particelleVicineAux = diag(grd_to_ptcl(s1,s2));
+      indiciCelleAdiacenti = [ic,ic+1,ic+M1-1,ic+M1,ic+M1+1];
+      particelleVicineAux = grd_to_ptcl(indiciCelleAdiacenti);
       particelleVicine = horzcat(particelleVicineAux{1},particelleVicineAux{2},particelleVicineAux{3},particelleVicineAux{4},particelleVicineAux{5});
     elseif (ic == M1 + 1)
-      aux = [ic,ic+1,ic+M1-1,ic+M1,ic+M1+1];
-      [s1,s2] = ind2sub ([grd.ncy, grd.ncx], aux);
-      particelleVicineAux = diag(grd_to_ptcl(s1,s2));
+      indiciCelleAdiacenti = [ic,ic+1,ic+M1-1,ic+M1,ic+M1+1];
+      particelleVicineAux = grd_to_ptcl(indiciCelleAdiacenti);
       particelleVicine = horzcat(particelleVicineAux{1},particelleVicineAux{2},particelleVicineAux{3},particelleVicineAux{4},particelleVicineAux{5});
     elseif (ic == 1)
-      aux = [ic,ic+1,ic+M1-1,ic+M1,ic+M1+1];
-      [s1,s2] = ind2sub ([grd.ncy, grd.ncx], aux);
-      particelleVicineAux = diag(grd_to_ptcl(s1,s2));
+      indiciCelleAdiacenti = [ic,ic+1,ic+M1-1,ic+M1,ic+M1+1];
+      particelleVicineAux = grd_to_ptcl(indiciCelleAdiacenti);
       particelleVicine = horzcat(particelleVicineAux{1},particelleVicineAux{2},particelleVicineAux{3},particelleVicineAux{4},particelleVicineAux{5});
     elseif (ic == Ncelle-M1-1)
-      aux = [ic,ic+1,ic+M1-1,ic+M1];
-      [s1,s2] = ind2sub ([grd.ncy, grd.ncx], aux);
-      particelleVicineAux = diag(grd_to_ptcl(s1,s2));
+      indiciCelleAdiacenti = [ic,ic+1,ic+M1-1,ic+M1];
+      particelleVicineAux = grd_to_ptcl(indiciCelleAdiacenti);
       particelleVicine = horzcat(particelleVicineAux{1},particelleVicineAux{2},particelleVicineAux{3},particelleVicineAux{4});
     elseif (ic == Ncelle)
-      aux = [ic];
-      [s1,s2] = ind2sub ([grd.ncy, grd.ncx], aux);
-      particelleVicineAux = diag(grd_to_ptcl(s1,s2));
+      indiciCelleAdiacenti = [ic];
+      particelleVicineAux = grd_to_ptcl(indiciCelleAdiacenti);
       particelleVicine = particelleVicineAux{1};
     elseif (ic <= M1 +1)
-      aux = [ic,ic+1,ic+M1-1,ic+M1,ic+M1+1];
-      [s1,s2] = ind2sub ([grd.ncy, grd.ncx], aux);
-      particelleVicineAux = diag(grd_to_ptcl(s1,s2));
+      indiciCelleAdiacenti = [ic,ic+1,ic+M1-1,ic+M1,ic+M1+1];
+      particelleVicineAux = grd_to_ptcl(indiciCelleAdiacenti);
       particelleVicine = horzcat(particelleVicineAux{1},particelleVicineAux{2},particelleVicineAux{3},particelleVicineAux{4},particelleVicineAux{5});
     else
-      aux = [ic,ic+1];
-      [s1,s2] = ind2sub ([grd.ncy, grd.ncx], aux);
-      particelleVicineAux = diag(grd_to_ptcl(s1,s2));
+      indiciCelleAdiacenti = [ic,ic+1];
+      particelleVicineAux = grd_to_ptcl(indiciCelleAdiacenti);
       particelleVicine = horzcat(particelleVicineAux{1},particelleVicineAux{2});
     end
 
@@ -60,20 +53,20 @@ function F = force(grd, ptcls, grd_to_ptcl, r_cut, sigma, epsilon)
     Z_matrix_squared = (A1 - A1').^2 + (A2 - A2').^2;
 
     
-    [s1,s2] = ind2sub([NparticelleVicine,NparticelleVicine],find(Z_matrix_squared <= r_cutQuadro & Z_matrix_squared != 0));
+    [particle_index_1,particle_index_2] = ind2sub([NparticelleVicine,NparticelleVicine],find(Z_matrix_squared <= r_cutQuadro & Z_matrix_squared != 0));
     
-    S = [particelleVicine(s1)',particelleVicine(s2)'];
+    particle_index = [particelleVicine(particle_index_1)',particelleVicine(particle_index_2)'];
 
-    if isempty(S)
+    if isempty(particle_index)
       continue
     end
     
-    aux = find(abs(ForzeCoppie(1,sub2ind([Nparticelle, Nparticelle],S(:,1),S(:,2)))) + ...
-	       abs(ForzeCoppie(2,sub2ind([Nparticelle, Nparticelle],S(:,1),S(:,2)))) == 0);
-    S = S(aux,:);
-    r = ptcls.x(:,S(:,1)) - ptcls.x(:,S(:,2));
+    aux = find(abs(ForzeCoppie(1,sub2ind([Nparticelle, Nparticelle],particle_index(:,1),particle_index(:,2)))) + ...
+	       abs(ForzeCoppie(2,sub2ind([Nparticelle, Nparticelle],particle_index(:,1),particle_index(:,2)))) == 0);
+    particle_index = particle_index(aux,:);
+    r = ptcls.x(:,particle_index(:,1)) - ptcls.x(:,particle_index(:,2));
     r_modulo = norm(r,2,"cols");
-    ForzeCoppie(:,sub2ind([Nparticelle, Nparticelle],S(:,1),S(:,2))) = f(r_modulo,r);
+    ForzeCoppie(:,sub2ind([Nparticelle, Nparticelle],particle_index(:,1),particle_index(:,2))) = f(r_modulo,r);
   end
 
   F = sum(ForzeCoppie,3);
