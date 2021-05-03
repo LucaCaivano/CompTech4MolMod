@@ -18,3 +18,6 @@ Projects of the numerical part of the course *Computational Techniques for Molec
 
 ## Assignment 2
 Reproduce the example in *Gabriel, Knapek, Zumbusch - Numerical Simulation in Molecular Dynamics - Section 3.6.1* using periodic boundary conditions.
+
+## Assignment 3
+Reproduce the example of Rayleigh-Taylor instability with Coulomb potential in *Gabriel, Knapek, Zumbusch - Numerical Simulation in Molecular Dynamics - Section 7.4.1*.
