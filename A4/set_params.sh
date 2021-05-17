@@ -1,6 +1,7 @@
 #!/bin/sh
 
-sed -e "s/%%D1%%/$1/g" c2h6.com.template | \
+sed -e "s/%%DESTDIR%%/c2h6_${19}.chk/g" c2h6.com.template | \
+sed -e "s/%%D1%%/$1/g" | \
 sed -e "s/%%A1%%/$2/g" | \
 sed -e "s/%%T1%%/$3/g" | \
 sed -e "s/%%D2%%/$4/g" | \
