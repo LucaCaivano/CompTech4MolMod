@@ -25,6 +25,30 @@ params = ...
  -120.
 ];
 
+
+%params per ottenere distanza negativa e verificare i vincoli
+%params = ...
+%[
+% 1.0;
+%179.;
+% 120.;
+ %1.03;
+ %110.;
+ %-179.;
+ %1.05;
+ %1.1;
+ %109.;
+ %1.03;
+ %109.;
+ %180.;
+ %1.05;
+ %109.;
+ %120.;
+ %1.1;
+ %179.;
+ %-120.
+%];
+
 lengths = ...
 logical ([
           1 %d1
