@@ -1,31 +1,31 @@
 function [x,err,iter,trace,H]= descent (fun, x0, tol, kmax, ...
-                                        meth, varargin)
+                                        meth, m, M, varargin)
 
-%DESCENT Metodo di discesa per il calcolo di minimi
-%  [X,ERR,ITER]=DESCENT(FUN,GRAD,X0,TOL,KMAX,METH,HESS)
-%  approssima un punto di minimo della funzione FUN
-%  mediante il metodo di discesa con direzioni di
-%  Newton (METH=1), BFGS (METH=2), del gradiente
-%  (METH=3) o del gradiente coniugato con
-%  beta_k di Fletcher and Reeves (METH=41),
-%  beta_k di Polak and Ribiere (METH=42),
-%  beta_k di Hestenes and Stiefel (METH=43).
-%  Il passo e' costruito con la tecnica di back-
-%  tracking. FUN, GRAD ed HESS (quest'ultima usata
-%  solo se METH=1) sono function handle
-%  associati alla funzione obiettivo, al suo gradiente
-%  ed alla matrice Hessiana. Se METH=2, HESS e' una
-%  matrice approssimante l'Hessiana nel punto iniziale
-%  X0 della successione. TOL e' la tolleranza per il
-%  test d'arresto e KMAX e' il numero massimo di
-%  iterazioni. Si richiama le function backtrack.m
+	       %DESCENT Metodo di discesa per il calcolo di minimi
+	       %  [X,ERR,ITER]=DESCENT(FUN,GRAD,X0,TOL,KMAX,METH,HESS)
+	       %  approssima un punto di minimo della funzione FUN
+	       %  mediante il metodo di discesa con direzioni di
+	       %  Newton (METH=1), BFGS (METH=2), del gradiente
+	       %  (METH=3) o del gradiente coniugato con
+	       %  beta_k di Fletcher and Reeves (METH=41),
+	       %  beta_k di Polak and Ribiere (METH=42),
+	       %  beta_k di Hestenes and Stiefel (METH=43).
+	       %  Il passo e' costruito con la tecnica di back-
+	       %  tracking. FUN, GRAD ed HESS (quest'ultima usata
+	       %  solo se METH=1) sono function handle
+	       %  associati alla funzione obiettivo, al suo gradiente
+	       %  ed alla matrice Hessiana. Se METH=2, HESS e' una
+	       %  matrice approssimante l'Hessiana nel punto iniziale
+	       %  X0 della successione. TOL e' la tolleranza per il
+	       %  test d'arresto e KMAX e' il numero massimo di
+	       %  iterazioni. Si richiama le function backtrack.m
 
   printf ("Eseguo descent, algoritmo %d, tolleranza %g, kmax %d\n",
           meth, tol, kmax);
   printf ("Stato iniziale : ")
   disp (x0(:)')
   
-  if nargin >= 6
+  if nargin >= 8
     if meth == 1, hess=varargin{1};
     elseif meth == 2 || nargout > 4;
       H = varargin{1};
@@ -36,14 +36,27 @@ function [x,err,iter,trace,H]= descent (fun, x0, tol, kmax, ...
   eps2 = sqrt (eps);
   trace.param (:, 1) = xk;
   trace.err (:, 1) = err;
+  
+  Ni = 0;
+  Mi = 3;
+  Li = ceil(kmax/(Ni+Mi));
+  Xj = zeros(numel(x0), Mi);    
+  lista = [zeros(Li, Ni), ones(Li,1)*(1:1:Mi)]';
+
+  
   while err>tol && k< kmax
 
     if meth==1;        H=hess(xk); dk=-H\gk; % Newton
     elseif meth==2     dk=-H\gk;             % BFGS
     elseif meth==3     dk=-gk;               % gradient
     end
+
+    dk = min(max(dk+xk, m), M)-xk;	%Direction projection according to bounds
     
-    if (gk'*dk > 0), dk = -gk; end % make sure dk is a descent direction
+    if (gk'*dk > 0)
+      dk = -gk;
+      dk = min(max(dk+xk, m), M)-xk;	%Direction projection according to bounds
+    end % make sure dk is a descent direction
     
     [xk1,fk1,gk1,alphak] = backtrack(fun,xk,fk,gk,dk);
     if meth==2 || nargout > 4 % BFGS update
@@ -64,22 +77,36 @@ function [x,err,iter,trace,H]= descent (fun, x0, tol, kmax, ...
     end
     xk=xk1; gk=gk1; k=k+1; xkt=xk1;
     
-    for i=1:length(xk1);
-      xkt(i)=max([abs(xk1(i)),1]); end
-    err=norm((gk1.*xkt)/max([abs(fk),1]),inf);
+
+    if lista(k) != 0
+      Xj(:,lista(k)) = xk;
+      if lista(k) == Mi
+	xk = Urrextrapolation(Xj);
+
+	[fk, gk] = fun(xk);
+
+      end
+    end
+
+%    for i=1:length(xk1);
+%      xkt(i)=max([abs(xk1(i)),1]); end
+%    err=norm((gk1.*xkt)/max([abs(fk),1]),inf);
+    for i=1:length(xk);
+      xkt(i)=max([abs(xk(i)),1]); end
+    err=norm((gk.*xkt)/max([abs(fk),1]),inf);
     
-  trace.param (:, k+1) = xk;
-  trace.err (:, k+1) = err;
-  
-  printf ("iterazione %d, stima dell\'errore %g, numero di valtazioni funzionali %d \n", k, err, func ([], [], [], 'getnumeval'));
-  printf ("Vettore di stato : ")
-  disp (xk(:)')
+    trace.param (:, k+1) = xk;
+    trace.err (:, k+1) = err;
+    
+    printf ("iterazione %d, stima dell\'errore %g, numero di valtazioni funzionali %d \n", k, err, func ([], [], [], 'getnumeval'));
+    printf ("Vettore di stato : ")
+    disp (xk(:)')
 
-end
+  end
 
-x=xk; iter=k;
-if (k==kmax && err > tol)
-  fprintf(['descent si e'' arrestato senza aver ',...
-   'soddisfatto l''accuratezza richiesta, avendo\n',...
-   'raggiunto il massimo numero di iterazioni\n']);
-end
+  x=xk; iter=k;
+  if (k==kmax && err > tol)
+    fprintf(['descent si e'' arrestato senza aver ',...
+	     'soddisfatto l''accuratezza richiesta, avendo\n',...
+	     'raggiunto il massimo numero di iterazioni\n']);
+  end

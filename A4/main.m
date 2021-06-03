@@ -5,7 +5,7 @@ func ([], [], [], 'resetnumeval');
 
 params = ...
 [
- 2.5;
+ 1.0;
  109.;
  120.;
  1.03;
@@ -47,16 +47,73 @@ logical ([
           0
           ]);
 
-angles = !(lengths);
+angles = !lengths;
+
+%M = zeros(numel(params),1);
+m = zeros(numel(params),1);
+m=m+lengths;
+M = [
+          Inf %d1
+          0 
+          0
+          Inf %d2
+          0
+          0
+          Inf %d3
+          Inf %d4
+          0
+          Inf %d5
+          0
+          0
+          Inf %d6
+          0
+          0
+          Inf %d7
+          0
+          0
+          ];
+
+
+angles2D = ...
+logical([
+          0 
+          1 %a1 
+          0
+          0 
+          1 %a2
+          0
+          0
+          0
+          1 %a3
+          0
+          1 %a4
+          0
+          0
+          1 %a5
+          0
+          0
+          1 %a6
+          0	 
+	 ]);
+
+M = M + 180*angles2D;
+
+angles3D = !(lengths + angles2D);
+
+m = m - 180*angles3D;
+M = M + 180*angles3D;
+
 
 %noise = 0.5;
 %rnd_params = params + noise * randn(1, numel(params));
 
 [x,err,iter_desc, trace_desc, H] = ...
-descent (@(x) func(x, lengths, angles), params, 1e-3, 5, 3, eye (numel (params)));
+descent (@(x) func(x, lengths, angles), params, 1e-3, 5, 3, m, M, eye (numel (params)));
 
 [x,err,iter_desc, trace_desc, H] = ...
-descent (@(x) func(x, lengths, angles), x, 1e-4, 50, 2, H);
+descent (@(x) func(x, lengths, angles), x, 1e-4, 20, 2, m, M, H);
+
+
 
 folder_move = sprintf ('mv *.com *.log %s', folder_name);
 system (folder_move);
